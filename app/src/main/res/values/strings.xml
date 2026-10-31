@@ -1,0 +1,15 @@
+<resources>
+    <string name="app_name">Google TV BT Remote</string>
+    <string name="disconnected">Desconectado</string>
+    <string name="tap_to_connect">Toque para conectar</string>
+    <string name="connecting">Conectando...</string>
+    <string name="connected">Conectado</string>
+    <string name="pairing_mode">Modo de pareamento</string>
+    <string name="dpad_mode">Modo D-Pad</string>
+    <string name="touchpad_mode">Modo Touchpad</string>
+    <string name="paired_devices">Dispositivos pareados</string>
+    <string name="open_bt_settings">Abrir Configurações Bluetooth</string>
+    <string name="no_bonded_devices">Nenhum dispositivo Bluetooth pareado encontrado.</string>
+    <string name="pairing_hint">Para parear pela primeira vez com o Chromecast ou Google TV:\n1. Na TV, acesse: Configurações > Controles remotos e acessórios > Adicionar acessório\n2. Mantenha este smartphone com Bluetooth visível e selecione na TV.</string>
+</resources>
+
