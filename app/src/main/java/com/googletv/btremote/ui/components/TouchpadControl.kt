@@ -15,25 +15,22 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableFloatStateOf
-import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.input.pointer.positionChange
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import com.googletv.btremote.ui.theme.SurfaceDark
 import com.googletv.btremote.ui.theme.TouchpadDot
+import com.googletv.btremote.ui.util.HapticHelper
 import kotlinx.coroutines.launch
 import kotlin.math.abs
 import kotlin.math.roundToInt
@@ -54,24 +51,23 @@ fun TouchpadControl(
     onTap: () -> Unit,
     modifier: Modifier = Modifier
 ) {
+    val context = LocalContext.current
     val haptic = LocalHapticFeedback.current
     val density = LocalDensity.current
     val coroutineScope = rememberCoroutineScope()
 
-    val swipeThresholdPx = with(density) { 42.dp.toPx() }
-    val dotDiameter = 36.dp
+    val swipeThresholdPx = with(density) { 38.dp.toPx() }
+    val dotDiameter = 40.dp
     val dotRadiusPx = with(density) { (dotDiameter / 2).toPx() }
 
     val dotX = remember { Animatable(0f) }
     val dotY = remember { Animatable(0f) }
 
-    var isInitialized by remember { mutableStateOf(false) }
-
     BoxWithConstraints(
         modifier = modifier
-            .fillMaxWidth(0.92f)
-            .aspectRatio(0.85f)
-            .clip(RoundedCornerShape(28.dp))
+            .fillMaxWidth(0.96f)
+            .aspectRatio(0.92f)
+            .clip(RoundedCornerShape(32.dp))
             .background(SurfaceDark)
             .pointerInput(Unit) {
                 awaitEachGesture {
@@ -120,6 +116,7 @@ fun TouchpadControl(
 
                                 if (absX > swipeThresholdPx || absY > swipeThresholdPx) {
                                     hasSwiped = true
+                                    HapticHelper.vibrateClick(context)
                                     haptic.performHapticFeedback(HapticFeedbackType.LongPress)
 
                                     if (absX > absY) {
@@ -142,6 +139,7 @@ fun TouchpadControl(
                             // Finger lifted (UP)
                             if (!hasSwiped) {
                                 // Tap event -> OK / Enter
+                                HapticHelper.vibrateClick(context)
                                 haptic.performHapticFeedback(HapticFeedbackType.LongPress)
                                 onTap()
                             }
@@ -187,4 +185,3 @@ fun TouchpadControl(
         )
     }
 }
-

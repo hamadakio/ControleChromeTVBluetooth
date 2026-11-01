@@ -21,12 +21,14 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.min
 import com.googletv.btremote.ui.theme.CenterSelect
 import com.googletv.btremote.ui.theme.SurfaceDark
 import com.googletv.btremote.ui.theme.TextSecondary
+import com.googletv.btremote.ui.util.HapticHelper
 
 /**
  * Minimalist circular D-Pad controller reproducing the official Google TV remote layout.
@@ -43,15 +45,17 @@ fun DPadControl(
     onCenterClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
+    val context = LocalContext.current
     val haptic = LocalHapticFeedback.current
 
     BoxWithConstraints(
         modifier = modifier,
         contentAlignment = Alignment.Center
     ) {
-        val diameter = min(maxWidth * 0.88f, 320.dp)
-        val centerDiameter = diameter * 0.44f
-        val arrowSize = 36.dp
+        // Generous, large touch-friendly diameter
+        val diameter = min(maxWidth * 0.94f, 350.dp)
+        val centerDiameter = diameter * 0.48f
+        val arrowSize = 44.dp
 
         // Outer Dark Gray Circle
         Box(
@@ -67,16 +71,17 @@ fun DPadControl(
             Box(
                 modifier = Modifier
                     .align(Alignment.TopCenter)
-                    .size(width = diameter * 0.6f, height = (diameter - centerDiameter) / 2f + 16.dp)
+                    .size(width = diameter * 0.65f, height = (diameter - centerDiameter) / 2f + 20.dp)
                     .clip(CircleShape)
                     .clickable(
                         interactionSource = remember { MutableInteractionSource() },
-                        indication = ripple(bounded = true, radius = 64.dp)
+                        indication = ripple(bounded = true, radius = 72.dp)
                     ) {
+                        HapticHelper.vibrateClick(context)
                         haptic.performHapticFeedback(HapticFeedbackType.LongPress)
                         onUpClick()
                     }
-                    .padding(top = 18.dp),
+                    .padding(top = 16.dp),
                 contentAlignment = Alignment.TopCenter
             ) {
                 Icon(
@@ -91,16 +96,17 @@ fun DPadControl(
             Box(
                 modifier = Modifier
                     .align(Alignment.BottomCenter)
-                    .size(width = diameter * 0.6f, height = (diameter - centerDiameter) / 2f + 16.dp)
+                    .size(width = diameter * 0.65f, height = (diameter - centerDiameter) / 2f + 20.dp)
                     .clip(CircleShape)
                     .clickable(
                         interactionSource = remember { MutableInteractionSource() },
-                        indication = ripple(bounded = true, radius = 64.dp)
+                        indication = ripple(bounded = true, radius = 72.dp)
                     ) {
+                        HapticHelper.vibrateClick(context)
                         haptic.performHapticFeedback(HapticFeedbackType.LongPress)
                         onDownClick()
                     }
-                    .padding(bottom = 18.dp),
+                    .padding(bottom = 16.dp),
                 contentAlignment = Alignment.BottomCenter
             ) {
                 Icon(
@@ -115,16 +121,17 @@ fun DPadControl(
             Box(
                 modifier = Modifier
                     .align(Alignment.CenterStart)
-                    .size(width = (diameter - centerDiameter) / 2f + 16.dp, height = diameter * 0.6f)
+                    .size(width = (diameter - centerDiameter) / 2f + 20.dp, height = diameter * 0.65f)
                     .clip(CircleShape)
                     .clickable(
                         interactionSource = remember { MutableInteractionSource() },
-                        indication = ripple(bounded = true, radius = 64.dp)
+                        indication = ripple(bounded = true, radius = 72.dp)
                     ) {
+                        HapticHelper.vibrateClick(context)
                         haptic.performHapticFeedback(HapticFeedbackType.LongPress)
                         onLeftClick()
                     }
-                    .padding(start = 18.dp),
+                    .padding(start = 16.dp),
                 contentAlignment = Alignment.CenterStart
             ) {
                 Icon(
@@ -139,16 +146,17 @@ fun DPadControl(
             Box(
                 modifier = Modifier
                     .align(Alignment.CenterEnd)
-                    .size(width = (diameter - centerDiameter) / 2f + 16.dp, height = diameter * 0.6f)
+                    .size(width = (diameter - centerDiameter) / 2f + 20.dp, height = diameter * 0.65f)
                     .clip(CircleShape)
                     .clickable(
                         interactionSource = remember { MutableInteractionSource() },
-                        indication = ripple(bounded = true, radius = 64.dp)
+                        indication = ripple(bounded = true, radius = 72.dp)
                     ) {
+                        HapticHelper.vibrateClick(context)
                         haptic.performHapticFeedback(HapticFeedbackType.LongPress)
                         onRightClick()
                     }
-                    .padding(end = 18.dp),
+                    .padding(end = 16.dp),
                 contentAlignment = Alignment.CenterEnd
             ) {
                 Icon(
@@ -159,7 +167,7 @@ fun DPadControl(
                 )
             }
 
-            // CENTER (SELECT / OK) BUTTON
+            // CENTER (SELECT / OK) BUTTON - Large and prominent
             Box(
                 modifier = Modifier
                     .size(centerDiameter)
@@ -167,14 +175,15 @@ fun DPadControl(
                     .background(CenterSelect)
                     .clickable(
                         interactionSource = remember { MutableInteractionSource() },
-                        indication = ripple(bounded = true)
+                        indication = ripple(bounded = true, radius = centerDiameter / 2)
                     ) {
+                        HapticHelper.vibrateClick(context)
                         haptic.performHapticFeedback(HapticFeedbackType.LongPress)
                         onCenterClick()
                     },
                 contentAlignment = Alignment.Center
             ) {
-                // Smooth minimalist circular surface as in the official remote
+                // Clean circular surface matching official remote
             }
         }
     }

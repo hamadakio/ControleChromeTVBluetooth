@@ -25,6 +25,8 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
 import java.util.concurrent.Executors
 
 /**
@@ -42,6 +44,8 @@ class BluetoothHidController(
     private val tag = "BluetoothHidController"
     private val coroutineScope = CoroutineScope(Dispatchers.IO + Job())
     private val executor = Executors.newSingleThreadExecutor()
+    private val sendKeyMutex = Mutex()
+    private var keepAliveJob: Job? = null
 
     private val bluetoothManager: BluetoothManager? =
         context.getSystemService(Context.BLUETOOTH_SERVICE) as? BluetoothManager
@@ -451,6 +455,7 @@ class BluetoothHidController(
     fun disconnect() {
         if (!hasConnectPermission()) return
 
+        stopKeepAlive()
         val device = connectedDevice ?: return
         try {
             hidDevice?.disconnect(device)
@@ -463,8 +468,9 @@ class BluetoothHidController(
     }
 
     /**
-     * Sends an HID key press followed by a release report after 30ms.
+     * Sends an HID key press followed by a release report after 40ms.
      * Prevents key repetition / sticking on Google TV / Android TV.
+     * Serialized via Mutex to prevent interleaved or corrupt packets.
      *
      * @param reportId Report ID: 1 for Keyboard, 2 for Consumer Control.
      * @param keyCode The usage code / key code to dispatch.
@@ -485,28 +491,33 @@ class BluetoothHidController(
         }
 
         coroutineScope.launch {
-            try {
-                val pressPayload = BluetoothHidDescriptor.createPressPayload(reportId, keyCode)
-                val releasePayload = BluetoothHidDescriptor.createReleasePayload(reportId)
+            sendKeyMutex.withLock {
+                try {
+                    val pressPayload = BluetoothHidDescriptor.createPressPayload(reportId, keyCode)
+                    val releasePayload = BluetoothHidDescriptor.createReleasePayload(reportId)
 
-                // 1. Send Key Press
-                val pressResult = proxy.sendReport(device, reportId, pressPayload)
-                if (!pressResult) {
-                    Log.w(tag, "sendReport (press) returned false for key 0x${Integer.toHexString(keyCode)}")
+                    // 1. Send Key Press
+                    val pressResult = proxy.sendReport(device, reportId, pressPayload)
+                    if (!pressResult) {
+                        Log.w(tag, "sendReport (press) returned false for key 0x${Integer.toHexString(keyCode)}")
+                    }
+
+                    // 2. Wait 40ms optimal debounce interval
+                    delay(40L)
+
+                    // 3. Send Key Release
+                    val releaseResult = proxy.sendReport(device, reportId, releasePayload)
+                    if (!releaseResult) {
+                        Log.w(tag, "sendReport (release) returned false")
+                    }
+
+                    // 4. Brief 15ms buffer to prevent packet collision on rapid presses
+                    delay(15L)
+                } catch (e: SecurityException) {
+                    Log.e(tag, "SecurityException in sendKey", e)
+                } catch (e: Exception) {
+                    Log.e(tag, "Exception in sendKey", e)
                 }
-
-                // 2. Wait 30ms
-                delay(30L)
-
-                // 3. Send Key Release
-                val releaseResult = proxy.sendReport(device, reportId, releasePayload)
-                if (!releaseResult) {
-                    Log.w(tag, "sendReport (release) returned false")
-                }
-            } catch (e: SecurityException) {
-                Log.e(tag, "SecurityException in sendKey", e)
-            } catch (e: Exception) {
-                Log.e(tag, "Exception in sendKey", e)
             }
         }
     }
@@ -548,6 +559,32 @@ class BluetoothHidController(
         preferencesManager.lastConnectedName = name
         _connectionState.value = HidConnectionState.Connected(device, name, address)
         Log.i(tag, "Successfully connected to $name ($address)")
+        startKeepAlive()
+    }
+
+    private fun startKeepAlive() {
+        stopKeepAlive()
+        keepAliveJob = coroutineScope.launch {
+            while (connectedDevice != null && hidDevice != null) {
+                delay(12000L) // Ping link every 12 seconds to prevent deep sleep / reconnect flicker
+                val dev = connectedDevice ?: break
+                val proxy = hidDevice ?: break
+                if (hasConnectPermission()) {
+                    try {
+                        val state = proxy.getConnectionState(dev)
+                        if (state != BluetoothProfile.STATE_CONNECTED) {
+                            Log.w(tag, "KeepAlive detected disconnected state, reconnecting...")
+                            connect(dev)
+                        }
+                    } catch (_: Exception) {}
+                }
+            }
+        }
+    }
+
+    private fun stopKeepAlive() {
+        keepAliveJob?.cancel()
+        keepAliveJob = null
     }
 
     fun hasConnectPermission(): Boolean {
@@ -570,6 +607,7 @@ class BluetoothHidController(
     @SuppressLint("MissingPermission")
     fun destroy() {
         try {
+            stopKeepAlive()
             stopDiscovery()
             if (isReceiverRegistered) {
                 context.unregisterReceiver(discoveryReceiver)

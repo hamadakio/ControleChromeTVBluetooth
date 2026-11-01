@@ -54,6 +54,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
@@ -72,6 +73,7 @@ import com.googletv.btremote.ui.theme.StatusGreen
 import com.googletv.btremote.ui.theme.SurfaceDark
 import com.googletv.btremote.ui.theme.TextSecondary
 import com.googletv.btremote.ui.theme.TextWhite
+import com.googletv.btremote.ui.util.HapticHelper
 import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -82,6 +84,7 @@ fun RemoteScreen(
     onRequestDiscoverable: () -> Unit,
     modifier: Modifier = Modifier
 ) {
+    val context = LocalContext.current
     val haptic = LocalHapticFeedback.current
     val coroutineScope = rememberCoroutineScope()
 
@@ -188,6 +191,7 @@ fun RemoteScreen(
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     IconButton(
                         onClick = {
+                            HapticHelper.vibrateClick(context)
                             haptic.performHapticFeedback(HapticFeedbackType.LongPress)
                             viewModel.onPower()
                         }
@@ -196,7 +200,7 @@ fun RemoteScreen(
                             imageVector = Icons.Outlined.PowerSettingsNew,
                             contentDescription = "Ligar / Desligar TV",
                             tint = TextWhite,
-                            modifier = Modifier.size(26.dp)
+                            modifier = Modifier.size(28.dp)
                         )
                     }
 
@@ -319,28 +323,29 @@ fun RemoteScreen(
                 }
             }
 
-            Spacer(modifier = Modifier.height(16.dp))
+            Spacer(modifier = Modifier.height(10.dp))
 
             // =================================================================
-            // 3. SYSTEM NAVIGATION ROW (Back, Home, Assistant)
+            // 3. SYSTEM NAVIGATION ROW (Back, Home, Assistant) - Larger & Tighter
             // =================================================================
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(horizontal = 12.dp),
+                    .padding(horizontal = 8.dp),
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                // Voltar (Back) - Medium Circle #2A2A2E
+                // Voltar (Back) - Large Circle #2A2A2E (72dp)
                 Box(
                     modifier = Modifier
-                        .size(62.dp)
+                        .size(72.dp)
                         .clip(CircleShape)
                         .background(SurfaceDark)
                         .clickable(
                             interactionSource = remember { MutableInteractionSource() },
                             indication = ripple(bounded = true)
                         ) {
+                            HapticHelper.vibrateClick(context)
                             haptic.performHapticFeedback(HapticFeedbackType.LongPress)
                             viewModel.onBack()
                         },
@@ -350,20 +355,21 @@ fun RemoteScreen(
                         imageVector = Icons.AutoMirrored.Filled.ArrowBack,
                         contentDescription = "Voltar",
                         tint = TextWhite,
-                        modifier = Modifier.size(24.dp)
+                        modifier = Modifier.size(28.dp)
                     )
                 }
 
-                // Home - Larger Circle #2A2A2E
+                // Home - Extra Large Circle #2A2A2E (86dp)
                 Box(
                     modifier = Modifier
-                        .size(74.dp)
+                        .size(86.dp)
                         .clip(CircleShape)
                         .background(SurfaceDark)
                         .clickable(
                             interactionSource = remember { MutableInteractionSource() },
                             indication = ripple(bounded = true)
                         ) {
+                            HapticHelper.vibrateClick(context)
                             haptic.performHapticFeedback(HapticFeedbackType.LongPress)
                             viewModel.onHome()
                         },
@@ -373,54 +379,56 @@ fun RemoteScreen(
                         imageVector = Icons.Outlined.Home,
                         contentDescription = "Início (Home)",
                         tint = TextWhite,
-                        modifier = Modifier.size(30.dp)
+                        modifier = Modifier.size(36.dp)
                     )
                 }
 
-                // Google Assistente - Medium White Circle #F1F3F4 with dark 4-dot icon
+                // Google Assistente - Large White Circle #F1F3F4 with dark 4-dot icon (72dp)
                 Box(
                     modifier = Modifier
-                        .size(62.dp)
+                        .size(72.dp)
                         .clip(CircleShape)
                         .background(AssistantBg)
                         .clickable(
                             interactionSource = remember { MutableInteractionSource() },
                             indication = ripple(bounded = true)
                         ) {
+                            HapticHelper.vibrateClick(context)
                             haptic.performHapticFeedback(HapticFeedbackType.LongPress)
                             viewModel.onAssistant()
                         },
                     contentAlignment = Alignment.Center
                 ) {
                     GoogleAssistantIcon(
-                        size = 28.dp
+                        size = 34.dp
                     )
                 }
             }
 
-            Spacer(modifier = Modifier.height(20.dp))
+            Spacer(modifier = Modifier.height(12.dp))
 
             // =================================================================
-            // 4. BOTTOM AUDIO ROW (Mute + Volume Pill)
+            // 4. BOTTOM AUDIO ROW (Mute + Volume Pill) - Larger & Ergonomic
             // =================================================================
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(horizontal = 12.dp)
-                    .padding(bottom = 16.dp),
+                    .padding(horizontal = 8.dp)
+                    .padding(bottom = 10.dp),
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                // Mute - Circular Button #2A2A2E
+                // Mute - Circular Button #2A2A2E (72dp)
                 Box(
                     modifier = Modifier
-                        .size(62.dp)
+                        .size(72.dp)
                         .clip(CircleShape)
                         .background(SurfaceDark)
                         .clickable(
                             interactionSource = remember { MutableInteractionSource() },
                             indication = ripple(bounded = true)
                         ) {
+                            HapticHelper.vibrateClick(context)
                             haptic.performHapticFeedback(HapticFeedbackType.LongPress)
                             viewModel.onMute()
                         },
@@ -430,15 +438,15 @@ fun RemoteScreen(
                         imageVector = Icons.AutoMirrored.Filled.VolumeOff,
                         contentDescription = "Mudo",
                         tint = TextWhite,
-                        modifier = Modifier.size(24.dp)
+                        modifier = Modifier.size(28.dp)
                     )
                 }
 
-                // Volume Pill Button - Divided into Volume Down and Volume Up
+                // Volume Pill Button - Divided into Volume Down and Volume Up (224dp x 72dp)
                 Box(
                     modifier = Modifier
-                        .width(200.dp)
-                        .height(62.dp)
+                        .width(224.dp)
+                        .height(72.dp)
                         .clip(RoundedCornerShape(50))
                         .background(SurfaceDark)
                 ) {
@@ -455,6 +463,7 @@ fun RemoteScreen(
                                     interactionSource = remember { MutableInteractionSource() },
                                     indication = ripple(bounded = true)
                                 ) {
+                                    HapticHelper.vibrateClick(context)
                                     haptic.performHapticFeedback(HapticFeedbackType.LongPress)
                                     viewModel.onVolumeDown()
                                 },
@@ -464,7 +473,7 @@ fun RemoteScreen(
                                 imageVector = Icons.AutoMirrored.Filled.VolumeDown,
                                 contentDescription = "Diminuir Volume",
                                 tint = TextWhite,
-                                modifier = Modifier.size(24.dp)
+                                modifier = Modifier.size(28.dp)
                             )
                         }
 
@@ -485,6 +494,7 @@ fun RemoteScreen(
                                     interactionSource = remember { MutableInteractionSource() },
                                     indication = ripple(bounded = true)
                                 ) {
+                                    HapticHelper.vibrateClick(context)
                                     haptic.performHapticFeedback(HapticFeedbackType.LongPress)
                                     viewModel.onVolumeUp()
                                 },
@@ -494,7 +504,7 @@ fun RemoteScreen(
                                 imageVector = Icons.AutoMirrored.Filled.VolumeUp,
                                 contentDescription = "Aumentar Volume",
                                 tint = TextWhite,
-                                modifier = Modifier.size(24.dp)
+                                modifier = Modifier.size(28.dp)
                             )
                         }
                     }

@@ -55,6 +55,9 @@ class MainActivity : ComponentActivity() {
         enableEdgeToEdge()
         super.onCreate(savedInstanceState)
 
+        // Keep screen active while remote is open to prevent CPU/Bluetooth sleep and reconnect flickers
+        window.addFlags(android.view.WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
+
         setContent {
             GoogleTVBTRemoteTheme {
                 Surface(
